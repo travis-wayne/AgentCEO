@@ -43,10 +43,10 @@ export function RecentActivity() {
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center">
-                <div className="h-8 w-8 rounded-full bg-gray-700 animate-pulse mr-4"></div>
+                <div className="size-8 rounded-full bg-gray-700 animate-pulse mr-4"></div>
                 <div className="flex-1 space-y-2">
                   <div className="size-4 bg-gray-700 rounded w-3/4 animate-pulse"></div>
-                  <div className="h-3 bg-gray-800 rounded w-1/2 animate-pulse"></div>
+                  <div className="bg-gray-800 rounded w-1/2 h-3 animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -75,7 +75,7 @@ export function RecentActivity() {
             {insights.length > 0 ? (
               insights.map((insight, index) => (
                 <div key={index} className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-bold mr-4">
+                  <div className="size-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-bold mr-4">
                     AI
                   </div>
                   <div className="flex-1">

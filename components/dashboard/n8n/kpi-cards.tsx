@@ -48,10 +48,10 @@ export function DashboardKPICards() {
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              <div className="size-4 rounded-full bg-gray-700 animate-pulse"></div>
+              <div className="rounded-full bg-gray-700 animate-pulse size-4"></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold bg-gray-700 h-8 w-3/4 rounded animate-pulse"></div>
+              <div className="text-2xl font-bold rounded bg-gray-700 animate-pulse w-3/4 h-8"></div>
               <p className="text-xs text-muted-foreground bg-gray-800 size-4 w-1/2 rounded mt-2 animate-pulse"></p>
             </CardContent>
           </Card>
