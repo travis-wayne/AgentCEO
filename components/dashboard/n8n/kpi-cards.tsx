@@ -48,11 +48,11 @@ export function DashboardKPICards() {
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              <div className="h-4 w-4 rounded-full bg-gray-700 animate-pulse"></div>
+              <div className="size-4 rounded-full bg-gray-700 animate-pulse"></div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold bg-gray-700 h-8 w-3/4 rounded animate-pulse"></div>
-              <p className="text-xs text-muted-foreground bg-gray-800 h-4 w-1/2 rounded mt-2 animate-pulse"></p>
+              <p className="text-xs text-muted-foreground bg-gray-800 size-4 w-1/2 rounded mt-2 animate-pulse"></p>
             </CardContent>
           </Card>
         ))}
@@ -83,7 +83,7 @@ export function DashboardKPICards() {
 
     return (
       <div className={`flex items-center text-xs ${colorClass}`}>
-        <Icon className="h-4 w-4 mr-1" />
+        <Icon className="size-4 mr-1" />
         {Math.abs(change).toFixed(2)}%
       </div>
     );
@@ -102,7 +102,7 @@ export function DashboardKPICards() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
-            className="h-4 w-4 text-muted-foreground"
+            className="size-4 text-muted-foreground"
           >
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
@@ -125,7 +125,7 @@ export function DashboardKPICards() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
-            className="h-4 w-4 text-muted-foreground"
+            className="size-4 text-muted-foreground"
           >
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
@@ -150,7 +150,7 @@ export function DashboardKPICards() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
-            className="h-4 w-4 text-muted-foreground"
+            className="size-4 text-muted-foreground"
           >
             <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
           </svg>
@@ -173,7 +173,7 @@ export function DashboardKPICards() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
-            className="h-4 w-4 text-muted-foreground"
+            className="size-4 text-muted-foreground"
           >
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>

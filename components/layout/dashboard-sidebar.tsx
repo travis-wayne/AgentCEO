@@ -43,6 +43,7 @@ export function DashboardSidebar({ links }: DashboardSidebarProps) {
     setMounted(true);
   }, []);
 
+
   useEffect(() => {
     if (mounted && typeof window !== "undefined") {
       window.localStorage.setItem(
@@ -110,7 +111,7 @@ export function DashboardSidebar({ links }: DashboardSidebarProps) {
                         {section.title}
                       </p>
                     ) : (
-                      <div className="h-4" />
+                      <div className="size-4" />
                     )}
                     {section.items.map((item) => {
                       const Icon = Icons[item.icon || "arrowRight"];
