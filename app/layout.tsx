@@ -41,7 +41,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
           >
             <ModalProvider>{children}</ModalProvider>
             <Analytics />
-            <Toaster richColors closeButton />
+            <Toaster
+              position="bottom-right"
+              richColors
+              closeButton
+              expand={false}
+              visibleToasts={5}
+            />
             <TailwindIndicator />
           </ThemeProvider>
         </SessionProvider>

@@ -53,19 +53,40 @@ export class N8nClient {
   }
 
   // Triggers a webhook (for workflows with a Webhook trigger node)
-  async triggerWebhook(webhookPath: string, data?: any) {
+  // Added 'method' parameter with a default of 'GET'
+  async triggerWebhook(webhookPath: string, method: 'GET' | 'POST' = 'GET', data?: any) {
     const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL;
     if (!webhookUrl) {
       console.error("NEXT_PUBLIC_N8N_WEBHOOK_URL is not defined.");
       throw new Error("n8n webhook URL is missing.");
     }
-    return fetch(`${webhookUrl}/${webhookPath}`, {
-      method: "POST",
+
+    const options: RequestInit = {
+      method: method,
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
-    });
+    };
+
+    // Only include body for POST requests that have data
+    if (method === 'POST' && data) {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(`${webhookUrl}/${webhookPath}`, options);
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // If response is not JSON, use status text
+        throw new Error(`Webhook request failed with status ${response.status}: ${response.statusText}`);
+      }
+      throw new Error(errorData.message || `Webhook request failed with status ${response.status}`);
+    }
+
+    return response; // Return the raw Response object for calling components to parse
   }
 }
 

@@ -2,189 +2,183 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Users, Zap } from "lucide-react";
 import { BusinessMetrics } from "@/types";
 import { n8nClient } from "@/lib/n8n-client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export function DashboardKPICards() {
-  const [metrics, setMetrics] = useState<BusinessMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [metrics, setMetrics] = useState<BusinessMetrics | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchMetrics() {
-      try {
-        // In a real scenario, n8n would expose an API endpoint
-        // that aggregates these metrics from various sources.
-        // For now, we'll simulate fetching data or use a direct webhook trigger.
+    useEffect(() => {
+        async function fetchMetrics() {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await n8nClient.triggerWebhook("get-business-metrics", "GET");
+                const rawData = await response.json();
 
-        // Example: Trigger an n8n workflow to get latest metrics
-        // You would create an n8n workflow with a Webhook trigger that
-        // gathers data and returns it as a Webhook Response.
-        // Replace 'get-business-metrics' with your actual n8n webhook path.
-        const response = await n8nClient.triggerWebhook("get-business-metrics");
-        const data = await response.json();
+                // --- START OF CHANGE ---
+                // Check if rawData is an array and extract the first element
+                const data = Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : rawData;
+                // --- END OF CHANGE ---
 
-        // Assuming the n8n webhook returns data in the BusinessMetrics format
-        setMetrics(data as BusinessMetrics);
-      } catch (err) {
-        console.error("Failed to fetch business metrics:", err);
-        setError("Failed to load business metrics. Please check n8n connection.");
-      } finally {
-        setLoading(false);
-      }
+                // Basic validation of the received data structure
+                if (!data || typeof data !== 'object' || !data.revenue || !data.leads || !data.conversions) {
+                    throw new Error("Invalid data structure received from n8n.");
+                }
+
+                setMetrics(data as BusinessMetrics);
+            } catch (err) {
+                console.error("Failed to fetch business metrics:", err);
+                setError("Failed to load business metrics. Please check n8n connection and ensure the workflow is active and returning valid data.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchMetrics();
+        const interval = setInterval(fetchMetrics, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => (
+                    <Card key={i}>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+                            <div className="rounded-full bg-gray-700 animate-pulse size-4"></div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold rounded bg-gray-700 animate-pulse w-3/4 h-8"></div>
+                            <p className="text-xs text-muted-foreground bg-gray-800 size-4 w-1/2 rounded mt-2 animate-pulse"></p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        );
     }
 
-    fetchMetrics();
-    // You might want to refetch periodically
-    const interval = setInterval(fetchMetrics, 60000); // Refetch every minute
-    return () => clearInterval(interval);
-  }, []);
+    if (error) {
+        return (
+            <Alert variant="destructive" className="col-span-full">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                    {error}
+                </AlertDescription>
+            </Alert>
+        );
+    }
 
-  if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              <div className="rounded-full bg-gray-700 animate-pulse size-4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold rounded bg-gray-700 animate-pulse w-3/4 h-8"></div>
-              <p className="text-xs text-muted-foreground bg-gray-800 size-4 w-1/2 rounded mt-2 animate-pulse"></p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+    if (!metrics) {
+        return (
+            <Alert variant="warning" className="col-span-full">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Warning</AlertTitle>
+                <AlertDescription>
+                    No metrics data available. Configure your n8n workflow to provide business insights.
+                </AlertDescription>
+            </Alert>
+        );
+    }
 
-  if (error) {
-    return (
-      <div className="col-span-full text-center text-red-500 p-4 border border-red-500 rounded-md">
-        {error}
-      </div>
-    );
-  }
+    const renderChange = (change: number) => {
+        const isPositive = change >= 0;
+        const Icon = isPositive ? TrendingUp : TrendingDown;
+        const colorClass = isPositive ? "text-emerald-500" : "text-red-500";
 
-  if (!metrics) {
-    return (
-      <div className="col-span-full text-center text-muted-foreground p-4">
-        No metrics data available. Configure your n8n workflow to provide business insights.
-      </div>
-    );
-  }
-
-  const renderChange = (change: number) => {
-    const isPositive = change >= 0;
-    const Icon = isPositive ? TrendingUp : TrendingDown;
-    const colorClass = isPositive ? "text-emerald-500" : "text-red-500";
+        return (
+            <div className={`flex items-center text-xs ${colorClass}`}>
+                <Icon className="size-4 mr-1" />
+                {Math.abs(change).toFixed(2)}%
+            </div>
+        );
+    };
 
     return (
-      <div className={`flex items-center text-xs ${colorClass}`}>
-        <Icon className="size-4 mr-1" />
-        {Math.abs(change).toFixed(2)}%
-      </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-card/50 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <DollarSign className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">
+                        {metrics.revenue?.current !== undefined && metrics.revenue?.current !== null
+                            ? `$${metrics.revenue.current.toLocaleString()}`
+                            : '—'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        {metrics.revenue?.change !== undefined && metrics.revenue?.change !== null
+                            ? renderChange(metrics.revenue.change)
+                            : '—'}{
+                        ' '}
+                        from last month
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="bg-card/50 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Leads Generated</CardTitle>
+                    <Users className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">
+                        {metrics.leads?.current !== undefined && metrics.leads?.current !== null
+                            ? `+${metrics.leads.current}`
+                            : '—'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        {metrics.leads?.change !== undefined && metrics.leads?.change !== null
+                            ? renderChange(metrics.leads.change)
+                            : '—'}{
+                        ' '}
+                        from last month
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="bg-card/50 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Conversions</CardTitle>
+                    <TrendingUp className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">
+                        {metrics.conversions?.current !== undefined && metrics.conversions?.current !== null
+                            ? metrics.conversions.current
+                            : '—'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        {metrics.conversions?.change !== undefined && metrics.conversions?.change !== null
+                            ? renderChange(metrics.conversions.change)
+                            : '—'}{
+                        ' '}
+                        from last month
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="bg-card/50 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Workflows</CardTitle>
+                    <Zap className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">
+                        {metrics.activeWorkflows !== undefined && metrics.activeWorkflows !== null
+                            ? metrics.activeWorkflows
+                            : '—'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        AI-powered automations running
+                    </p>
+                </CardContent>
+            </Card>
+        </div>
     );
-  };
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="size-4 text-muted-foreground"
-          >
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${metrics.revenue.current.toLocaleString()}</div>
-          <p className="text-xs text-muted-foreground">
-            {renderChange(metrics.revenue.change)} from last month
-          </p>
-        </CardContent>
-      </Card>
-      <Card className="bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Leads Generated</CardTitle>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="size-4 text-muted-foreground"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">+{metrics.leads.current}</div>
-          <p className="text-xs text-muted-foreground">
-            {renderChange(metrics.leads.change)} from last month
-          </p>
-        </CardContent>
-      </Card>
-      <Card className="bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Conversions</CardTitle>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="size-4 text-muted-foreground"
-          >
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-          </svg>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{metrics.conversions.current}</div>
-          <p className="text-xs text-muted-foreground">
-            {renderChange(metrics.conversions.change)} from last month
-          </p>
-        </CardContent>
-      </Card>
-      <Card className="bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Workflows</CardTitle>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            className="size-4 text-muted-foreground"
-          >
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{metrics.activeWorkflows}</div>
-          <p className="text-xs text-muted-foreground">
-            AI-powered automations running
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
 }

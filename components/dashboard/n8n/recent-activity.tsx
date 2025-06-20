@@ -6,6 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { BusinessMetrics } from "@/types";
 import { n8nClient } from "@/lib/n8n-client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export function RecentActivity() {
   const [insights, setInsights] = useState<string[]>([]);
@@ -14,22 +16,33 @@ export function RecentActivity() {
 
   useEffect(() => {
     async function fetchInsights() {
+      setLoading(true);
+      setError(null);
       try {
-        // This would ideally come from an n8n workflow that aggregates AI insights
-        // For now, we'll simulate fetching data or use a direct webhook trigger.
-        const response = await n8nClient.triggerWebhook("get-ai-insights");
-        const data = await response.json();
+        const response = await n8nClient.triggerWebhook("get-ai-insights", "GET");
+        const rawData = await response.json();
+
+        // --- START OF CHANGE ---
+        // Check if rawData is an array and extract the first element
+        const data = Array.isArray(rawData) && rawData.length > 0 ? rawData[0] : rawData;
+        // --- END OF CHANGE ---
+
+        // Validate the received data structure
+        if (!data || typeof data !== 'object' || !Array.isArray(data.aiInsights)) {
+          throw new Error("Invalid data structure received for AI insights from n8n.");
+        }
+
         setInsights(data.aiInsights || []);
       } catch (err) {
         console.error("Failed to fetch AI insights:", err);
-        setError("Failed to load AI insights. Please check n8n connection.");
+        setError("Failed to load AI insights. Please check n8n connection and ensure the workflow is active and returning valid data.");
       } finally {
         setLoading(false);
       }
     }
 
     fetchInsights();
-    const interval = setInterval(fetchInsights, 60000); // Refetch every minute
+    const interval = setInterval(fetchInsights, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -58,8 +71,19 @@ export function RecentActivity() {
 
   if (error) {
     return (
-      <Card className="col-span-3 text-center text-red-500 p-4 border border-red-500 rounded-md">
-        {error}
+      <Card className="col-span-3 bg-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle>Recent AI Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
       </Card>
     );
   }
